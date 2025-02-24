@@ -1,0 +1,13 @@
+[project]
+name = "crop-sequences-paper"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "geopandas>=1.0.1",
+    "openpyxl>=3.1.5",
+    "pyarrow>=19.0.0",
+    "pyogrio>=0.10.0",
+    "tqdm>=4.67.1",
+]
