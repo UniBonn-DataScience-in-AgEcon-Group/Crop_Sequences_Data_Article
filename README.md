@@ -5,6 +5,7 @@ This repository presents a Python script allowing to generate crop sequences bas
 ## Prerequisites
 
 - Python 3.6 or higher
+- [gdal](https://gdal.org/)
 - [uv](https://docs.astral.sh/uv/#installation)
 - [git](https://git-scm.com/)
 
