@@ -112,33 +112,45 @@ for year in crop_types.keys():
   # Join all plots from {year} that intersect
   # with the current year plots
   crop_types[year]["geometry_right"] = crop_types[year].geometry
-  plots_current = plots_current.sjoin(
+  plots_current_joined = plots_current.sjoin(
     crop_types[year],
     how='left',
     predicate='intersects'
   )
   
   # Add a column with the area of the intersection
-  plots_current["intersection"] = plots_current.progress_apply(
+  plots_current_joined["intersection"] = plots_current_joined.progress_apply(
     # lambda row: row['geometry'].intersection(row['geometry_right']).area if row['geometry_right'] else 0, axis=1
     lambda row: get_intersection_area(row), axis=1
   )
   
   # remove rows where the intersection area is less than 1 square meter
-  plots_current = plots_current[plots_current["intersection"] > 1]
+  plots_current_joined = plots_current_joined[plots_current_joined["intersection"] > 1]
   
   # Sort by intersection area and keep only the last row 
   # (largest intersection) for each plot
-  plots_current = plots_current\
+  plots_current_joined = plots_current_joined\
     .sort_values(by='intersection')\
     .groupby(f"{id_key_cur}_left")\
     .last()\
     .reset_index()
   
-  # Drop the columns that are not needed anymore
-  plots_current = plots_current.drop(
-    columns=['index_right', 'intersection', 'geometry_right', f"{id_key_cur}_right"]
+  # Perform an outer join to retain rows from the original dataframe
+  plots_current = plots_current.merge(
+      plots_current_joined,
+      left_on=id_key_cur,
+      right_on=f"{id_key_cur}_left",
+      how='outer',
+      suffixes=('', '_joined')
   )
+  
+  # Drop the columns that are not needed anymore
+  joined_cols = [c for c in plots_current.columns if c.endswith('_joined')]
+  plots_current = plots_current.drop(
+    columns=['index_right', 'intersection', 'geometry_right', f"{id_key_cur}_right", id_key_cur] + joined_cols,
+    errors='ignore'
+  )
+    
   plots_current.set_crs(epsg=25832, inplace=True)
   # rename ID_left to ID
   plots_current.rename(columns={f"{id_key_cur}_left": id_key_cur}, inplace=True)
